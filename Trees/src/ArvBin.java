@@ -1,16 +1,7 @@
-public class ArvBin {
-    private String[] nodes;
-    private int qtd;
+public class ArvBin implements Arv{
+    public String[] nodes;
+    public int qtd;
     public int kind;
-    public static void main(String[] args) throws Exception {
-        ArvBin a = new ArvBin(100);
-        a.insert("jose");
-        a.insert("joao");
-        a.insert("maria");
-        a.insert("mario");
-        a.insert("pedro");
-        System.out.println(a.toString());
-    }
 
     public ArvBin(int n){
         this.nodes = new String[n];
@@ -34,24 +25,26 @@ public class ArvBin {
         return 1 + leftCount + rightCount;
     }
 
+    @Override
     public boolean find(String target){
         if(findIndex(0, target) == -1) return false;
         else return true;
     }
 
     protected String getNode(int position){
-        if (position < 0 || position >= nodes.length || nodes[position].equals("")) {
+        if (position < 0 || position >= this.nodes.length || nodes[position].equals("")) {
             return("");
         }
 
         return(this.nodes[position]);
     }
 
+    @Override
     public void insert(String value) {
-        if (nodes[0].equals("")) {
+        if (this.nodes[0].equals("")) {
             // Insere na raiz se estiver vazia
-            nodes[0] = value;
-            qtd++;
+            this.nodes[0] = value;
+            this.qtd++;
         } else {
             // Chama a função recursiva para inserir
             insertRecursive(0, value);
@@ -59,20 +52,20 @@ public class ArvBin {
     }
 
     private void insertRecursive(int index, String value) {
-        if (index >= nodes.length) {
+        if (index >= this.nodes.length) {
             System.out.println("Erro: Não é possível inserir, array cheio.");
             return;
         }
 
-        if (nodes[index].equals("")) {
+        if (this.nodes[index].equals("")) {
             // Insere o valor na posição correta
-            nodes[index] = value;
-            qtd++;
+            this.nodes[index] = value;
+            this.qtd++;
         } 
-        else if (value.compareTo(nodes[index]) < 0) {
+        else if (value.compareTo(this.nodes[index]) < 0) {
             insertRecursive(nodeLeft(index), value);
         } 
-        else if (value.compareTo(nodes[index]) > 0) {
+        else if (value.compareTo(this.nodes[index]) > 0) {
             insertRecursive(nodeRight(index), value);
         } 
         else {
@@ -86,12 +79,13 @@ public class ArvBin {
         else return false; //codar o resto disso aqui 
     }
 
+    @Override
     public int len(){
         return (this.qtd);
     }
 
     protected int nodeLeft(int i){
-        if (i < 0 || i >= nodes.length || nodes[i].equals("")) {
+        if (i < 0 || i >= this.nodes.length || this.nodes[i].equals("")) {
             return -1;
         }
 
@@ -99,13 +93,14 @@ public class ArvBin {
     }
 
     protected int nodeRight(int i){
-        if (i < 0 || i >= nodes.length || nodes[i].equals("")) {
+        if (i < 0 || i >= this.nodes.length || this.nodes[i].equals("")) {
             return -1;
         }
 
         return (2*i+2);
     }
 
+    @Override
     public boolean remove(String target) {
         int index = findIndex(0, target); // Encontra o índice do nó a ser removido
 
@@ -145,7 +140,7 @@ public class ArvBin {
     }
 
     // Encontra o índice do menor valor em uma subárvore
-    private int findMin(int index) {
+    protected int findMin(int index) {
         while (nodeLeft(index) < nodes.length && !nodes[nodeLeft(index)].equals("")) {
             index = nodeLeft(index);
         }
@@ -160,6 +155,7 @@ public class ArvBin {
         this.nodes[i] = value;
     }
 
+    @Override
     public String toString() {
         StringBuilder dot = new StringBuilder();
         dot.append("digraph Arvore {\n");
@@ -187,7 +183,7 @@ public class ArvBin {
         return dot.toString();
     }
 
-    private int findIndex(int src, String target){
+    protected int findIndex(int src, String target){
         if (src < 0 || src >= nodes.length || this.nodes[src].equals("")) {
             return -1;
         }
