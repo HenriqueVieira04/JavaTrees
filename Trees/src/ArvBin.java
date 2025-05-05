@@ -84,6 +84,14 @@ public class ArvBin implements Arv{
         return (this.qtd);
     }
 
+    protected int nodeFather(int i){
+        if (i < 0 || i >= this.nodes.length || this.nodes[i].equals("")) {
+            return -1;
+        }
+
+        return ((int) ((i-1)/2));
+    }
+
     protected int nodeLeft(int i){
         if (i < 0 || i >= this.nodes.length || this.nodes[i].equals("")) {
             return -1;

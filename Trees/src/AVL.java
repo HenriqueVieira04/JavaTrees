@@ -1,9 +1,16 @@
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
 public class AVL extends ArvBin {
     int[] alturas;
+    List<String> toRemove;
 
     public AVL(int n){
         super(n);
         alturas = new int[n];
+        toRemove = new ArrayList<>();
     }
 
     @Override
@@ -20,6 +27,73 @@ public class AVL extends ArvBin {
 
     private int max(int a, int b) {
         return (a > b) ? a : b;
+    }
+
+    private List<String> getSubTree(int position){ //Percorre a subarvore pelos niveis removendo os nós e guardando eles em ordem
+        List <String> toRem = new ArrayList<>();
+        Queue<Integer> queue = new LinkedList<>();
+
+        int index;
+        int left;
+        int right;
+        
+        if(position >= 0 && position < this.nodes.length && !this.nodes[position].equals("")){
+            queue.add(position);
+        }
+
+        while(!queue.isEmpty()){
+            index = queue.poll();
+            toRem.add(this.nodes[index]);
+
+            left = nodeLeft(index);
+            right = nodeRight(index);
+
+            if (left < this.nodes.length && !this.nodes[left].equals("")) {
+                queue.add(left);
+            }
+    
+            if (right < this.nodes.length && !this.nodes[right].equals("")) {
+                queue.add(right);
+            }
+        }
+
+        return toRem;
+    }
+
+    private void reBalance(List <String> nodesToInsert, boolean right_rotation, int root){
+        int left = nodeLeft(root);
+        int right = nodeRight(root);
+        String father = this.nodes[root];
+        String leftValue = "";
+        String rightValue = "";
+
+        if(left >= 0 && left < this.nodes.length){
+            leftValue = this.nodes[left];
+        }
+        if(right >= 0 && right < this.nodes.length){
+            rightValue = this.nodes[right];
+        }
+
+        int a;
+        for(int cont = 0; cont < nodesToInsert.size(); cont++){
+            a = findIndex(0, nodesToInsert.get(cont));
+            this.nodes[a] = ""; 
+        }
+
+        if(right_rotation == true && leftValue != ""){
+            this.nodes[root] = leftValue;
+            this.nodes[nodeRight(root)] = father;
+        }
+
+        else if(rightValue!=""){
+            this.nodes[root] = rightValue;
+            this.nodes[nodeLeft(root)] = father;
+        }
+
+        // O pai e filho que ja foram inseridos não são inseridos novamentos, visto que não há repetições nas inserções
+        for(int cont = 0; cont < nodesToInsert.size(); cont++){
+            insert(nodesToInsert.get(cont));
+        }
     }
 
     private void insertRecursive(int index, String value) {
@@ -46,37 +120,53 @@ public class AVL extends ArvBin {
             return;
         }
 
-        // Atualiza a altura do nó atual
-        this.alturas[index] = 1 + max(altNo(nodeLeft(index)), altNo(nodeRight(index)));
+        // Atualiza a altura de todos os nós da arvore
+        heightRecursive(0);
 
         // Calcula o fator de balanceamento
-        int balanceFactor = altNo(nodeLeft(index)) - altNo(nodeRight(index));
+        int balanceFactor = heightNode(nodeLeft(index)) - heightNode(nodeRight(index));
 
         // Verifica desbalanceamento e aplica rotações
+        int rightChild;
+        int leftChild;
+
         if (balanceFactor == -2) {
             // Desbalanceamento para a direita
-            int rightChild = nodeRight(index);
-            if (altNo(nodeLeft(rightChild)) <= altNo(nodeRight(rightChild))) {
-                // Rotação simples à esquerda
-                rotacaoEsquerda(index);
+            rightChild = nodeRight(index);
+            if (heightNode(nodeLeft(rightChild)) <= heightNode(nodeRight(rightChild))) {
+                rotacaoEsquerda(index); // Rotação simples à esquerda
             } else {
-                // Rotação dupla direita-esquerda
-                rotacaoDireitaEsquerda(index);
+                rotacaoDireitaEsquerda(index); // Rotação dupla direita-esquerda
             }
-        } else if (balanceFactor == 2) {
+        } 
+        else if (balanceFactor == 2) {
             // Desbalanceamento para a esquerda
-            int leftChild = nodeLeft(index);
-            if (altNo(nodeLeft(leftChild)) >= altNo(nodeRight(leftChild))) {
-                // Rotação simples à direita
-                rotacaoDireita(index);
+            leftChild = nodeLeft(index);
+            if (heightNode(nodeLeft(leftChild)) >= heightNode(nodeRight(leftChild))) {
+                rotacaoDireita(index); // Rotação simples à direita
             } else {
-                // Rotação dupla esquerda-direita
-                rotacaoEsquerdaDireita(index);
+                rotacaoEsquerdaDireita(index); // Rotação dupla esquerda-direita
             }
         }
     }
 
-    private int altNo(int position){
+
+    private int heightRecursive(int index){
+        if(this.nodes[index].equals("")){
+            this.alturas[index] = 0;
+            return 0;
+        }
+
+        int heightLeft = 1 + heightRecursive(nodeLeft(index));
+        int heightRight = 1 + heightRecursive(nodeRight(index));
+
+        int aux = max(heightLeft, heightRight);
+        this.alturas[index] = aux;
+
+        return(aux);
+    }
+
+    private int heightNode(int position){
         if (position < 0 || position >= this.nodes.length || nodes[position].equals("")) {
             return -1;
         }
@@ -85,142 +175,28 @@ public class AVL extends ArvBin {
     }
 
     private void rotacaoEsquerda(int index) {
-        int right = nodeRight(index);
-        if (right == -1 || right >= this.nodes.length || this.nodes[right].equals("")) {
-            return; // Não há filho direito para rotacionar
-        }
-
-        // Salva os valores temporariamente
-        String tempValue = this.nodes[index];
-        String rightValue = this.nodes[right];
-
-        // Move o valor do filho direito para o nó atual
-        this.nodes[index] = rightValue;
-
-        // Ajusta os filhos
-        int rightLeft = nodeLeft(right);
-        if (rightLeft != -1 && rightLeft < this.nodes.length) {
-            this.nodes[nodeRight(index)] = this.nodes[rightLeft];
-            this.nodes[rightLeft] = "";
-        } else {
-            this.nodes[nodeRight(index)] = "";
-        }
-
-        this.nodes[nodeLeft(index)] = tempValue;
-
-        // Atualiza as alturas
-        this.alturas[right] = 1 + max(altNo(nodeLeft(right)), altNo(nodeRight(right)));
-        this.alturas[index] = 1 + max(altNo(nodeLeft(index)), altNo(nodeRight(index)));
+        List <String> sub = getSubTree(index);
+        reBalance(sub, false, index);
     }
 
     private void rotacaoDireita(int index) {
-        int left = nodeLeft(index);
-        if (left == -1 || left >= this.nodes.length || this.nodes[left].equals("")) {
-            return; // Não há filho esquerdo para rotacionar
-        }
-
-        // Salva os valores temporariamente
-        String tempValue = this.nodes[index];
-        String leftValue = this.nodes[left];
-
-        // Move o valor do filho esquerdo para o nó atual
-        this.nodes[index] = leftValue;
-
-        // Ajusta os filhos
-        int leftRight = nodeRight(left);
-        if (leftRight != -1 && leftRight < this.nodes.length) {
-            this.nodes[nodeLeft(index)] = this.nodes[leftRight];
-            this.nodes[leftRight] = "";
-        } else {
-            this.nodes[nodeLeft(index)] = "";
-        }
-
-        this.nodes[nodeRight(index)] = tempValue;
-
-        // Atualiza as alturas
-        this.alturas[left] = 1 + max(altNo(nodeLeft(left)), altNo(nodeRight(left)));
-        this.alturas[index] = 1 + max(altNo(nodeLeft(index)), altNo(nodeRight(index)));
+        List <String> sub = getSubTree(index);
+        reBalance(sub, true, index);
     }
 
     private void rotacaoEsquerdaDireita(int index) {
-        int left = nodeLeft(index);
-        rotacaoEsquerda(left);
-        rotacaoDireita(index);
+        List <String> sub = getSubTree(index);
+        reBalance(sub, false, index);
+        sub = getSubTree(index);
+        reBalance(sub, true, index);
     }
 
     private void rotacaoDireitaEsquerda(int index) {
-        int right = nodeRight(index);
-        rotacaoDireita(right);
-        rotacaoEsquerda(index);
+        List <String> sub = getSubTree(index);
+        reBalance(sub, true, index);
+        sub = getSubTree(index);
+        reBalance(sub, false, index);
     }
 
-    @Override
-    public boolean remove(String value) {
-        int index = findIndex(0, value); // Encontra o índice do nó a ser removido
-        if (index == -1) {
-            return false; // Nó não encontrado
-        }
-
-        removeRecursive(index);
-        this.qtd--;
-        return true;
-    }
-
-    private void removeRecursive(int index) {
-        if (index >= this.nodes.length || this.nodes[index].equals("")) {
-            return; // Nó não existe
-        }
-
-        // Caso 1: Nó é uma folha
-        if (nodeLeft(index) >= this.nodes.length || this.nodes[nodeLeft(index)].equals("")) {
-            if (nodeRight(index) >= this.nodes.length || this.nodes[nodeRight(index)].equals("")) {
-                this.nodes[index] = ""; // Remove o nó simplesmente
-                this.alturas[index] = 0; // Atualiza a altura
-                return;
-            }
-        }
-
-        // Caso 2: Nó tem apenas um filho
-        if (this.nodes[nodeLeft(index)].equals("")) { // Apenas filho direito
-            this.nodes[index] = this.nodes[nodeRight(index)];
-            removeRecursive(nodeRight(index));
-        } else if (this.nodes[nodeRight(index)].equals("")) { // Apenas filho esquerdo
-            this.nodes[index] = this.nodes[nodeLeft(index)];
-            removeRecursive(nodeLeft(index));
-        } else {
-            // Caso 3: Nó tem dois filhos
-            int successorIndex = findMin(nodeRight(index)); // Encontra o sucessor
-            this.nodes[index] = this.nodes[successorIndex]; // Substitui pelo sucessor
-            removeRecursive(successorIndex); // Remove o sucessor
-        }
-
-        // Atualiza a altura do nó atual
-        this.alturas[index] = 1 + max(altNo(nodeLeft(index)), altNo(nodeRight(index)));
-
-        // Calcula o fator de balanceamento
-        int balanceFactor = altNo(nodeLeft(index)) - altNo(nodeRight(index));
-
-        // Verifica desbalanceamento e aplica rotações
-        if (balanceFactor == -2) {
-            // Desbalanceamento para a direita
-            int rightChild = nodeRight(index);
-            if (altNo(nodeLeft(rightChild)) <= altNo(nodeRight(rightChild))) {
-                // Rotação simples à esquerda
-                rotacaoEsquerda(index);
-            } else {
-                // Rotação dupla direita-esquerda
-                rotacaoDireitaEsquerda(index);
-            }
-        } else if (balanceFactor == 2) {
-            // Desbalanceamento para a esquerda
-            int leftChild = nodeLeft(index);
-            if (altNo(nodeLeft(leftChild)) >= altNo(nodeRight(leftChild))) {
-                // Rotação simples à direita
-                rotacaoDireita(index);
-            } else {
-                // Rotação dupla esquerda-direita
-                rotacaoEsquerdaDireita(index);
-            }
-        }
-    }
+   
 }
