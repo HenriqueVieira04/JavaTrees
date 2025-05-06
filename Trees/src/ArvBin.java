@@ -108,6 +108,10 @@ public class ArvBin implements Arv{
         return (2*i+2);
     }
 
+    protected int max(int a, int b) {
+        return (a > b) ? a : b;
+    }
+
     @Override
     public boolean remove(String target) {
         int index = findIndex(0, target); // Encontra o índice do nó a ser removido
@@ -138,12 +142,27 @@ public class ArvBin implements Arv{
         else if (nodes[nodeRight(index)].equals("")) { // Apenas filho direito
             this.nodes[index] = this.nodes[nodeLeft(index)];
             return(removeNode(nodeLeft(index)));
-        }  
+        }
+
+
         // Caso 3: Nó tem dois filhos
         else {
-            int successorIndex = findMin(nodeRight(index)); // Encontra o sucessor
-            this.nodes[index] = this.nodes[successorIndex]; // Substitui pelo sucessor
-            return(removeNode(successorIndex)); // Remove o sucessor "origem"
+            int maxesq = findMax(nodeLeft(index)); // Encontra o sucessor
+            int mindir = findMin(nodeRight(index));
+
+            
+
+            if( maxesq < mindir){
+                this.nodes[index] = this.nodes[maxesq];
+                removeNode(maxesq);
+                return true;
+            }
+            else{
+                this.nodes[index] = this.nodes[mindir];
+                removeNode(mindir);
+                return true;
+            }
+            
         }
     }
 
@@ -151,6 +170,13 @@ public class ArvBin implements Arv{
     protected int findMin(int index) {
         while (nodeLeft(index) < nodes.length && !nodes[nodeLeft(index)].equals("")) {
             index = nodeLeft(index);
+        }
+        return index;
+    }
+
+    protected int findMax(int index){
+        while (nodeRight(index) < nodes.length && !nodes[nodeRight(index)].equals("")) {
+            index = nodeRight(index);
         }
         return index;
     }
@@ -169,21 +195,45 @@ public class ArvBin implements Arv{
         dot.append("digraph Arvore {\n");
 
         for (int i = 0; i < this.nodes.length; i++) {
-            if (!this.nodes[i].equals("")) {
-                // Adiciona o nó atual
-                dot.append("    ").append(i).append(" [label=\"").append(i+" ").append(this.nodes[i]).append("\"];\n");
+            int left = nodeLeft(i);
+            int right = nodeRight(i);
 
-                // Adiciona a aresta para o filho esquerdo, se existir
-                int left = nodeLeft(i);
-                if (left < this.nodes.length && left != -1 && !this.nodes[left].equals("")) {
-                    dot.append("    ").append(i).append(" -> ").append(left).append(";\n");
+            if(left != -1 && right != -1){
+                if (!this.nodes[nodeLeft(i)].equals("") && !this.nodes[nodeRight(i)].equals("")) {
+                    
+                    dot.append("\"").append(i+" ").append(this.nodes[i]).append("\"");
+                    if (left < this.nodes.length && left != -1 && !this.nodes[left].equals("")) {
+                        dot.append(" ->").append(left+" "+this.nodes[left]+"\"\n");
+                    }
+
+                    dot.append("\"").append(i+" ").append(this.nodes[i]).append("\"");
+                    if (right < this.nodes.length && right != -1 && !this.nodes[right].equals("")) {
+                        dot.append(" ->").append(right+" "+this.nodes[right]+"\"\n");
+                    }
+                }
+            }
+
+            else{ 
+                if(left != -1){ 
+                    if (!this.nodes[nodeLeft(i)].equals("")) {
+                        // Adiciona o nó atual
+                        dot.append("\"").append(i+" ").append(this.nodes[i]).append("\"");
+                        // Adiciona a aresta para o filho esquerdo, se existir
+                        if (!this.nodes[left].equals("")) {
+                            dot.append(" ->").append(left+" "+this.nodes[left]+"\"\n");
+                        }
+                    }
                 }
 
-                // Adiciona a aresta para o filho direito, se existir
-                int right = nodeRight(i);
-                if (right < this.nodes.length && right != -1 && !this.nodes[right].equals("")) {
-                    dot.append("    ").append(i).append(" -> ").append(right).append(";\n");
-                }
+                else if(right != -1){
+                    if (!this.nodes[nodeRight(i)].equals("")) {
+
+                        dot.append("\"").append(i+" ").append(this.nodes[i]).append("\"");
+                        if (!this.nodes[right].equals("")) {
+                            dot.append(" ->").append(right+" "+this.nodes[right]+"\"\n");
+                        }
+                    }
+                }   
             }
         }
 

@@ -25,9 +25,6 @@ public class AVL extends ArvBin {
         }
     }
 
-    private int max(int a, int b) {
-        return (a > b) ? a : b;
-    }
 
     private List<String> getSubTree(int position){ //Percorre a subarvore pelos niveis removendo os nós e guardando eles em ordem
         List <String> toRem = new ArrayList<>();

@@ -3,32 +3,34 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) throws Exception {
         ArvBin a = new ArvBin(100);
-        AVL av = new AVL(100);
+        //AVL av = new AVL(100);
+        /* 
+        a.insert("Sergio");
+        a.insert("Abel");
+        a.insert("Aaron");
+        a.insert("Sergio");
 
-        av.insert("Sergio");
-        av.insert("Abel");
-        av.insert("Aaron");
-        av.insert("Sergio");
-
-        System.out.println(av.toString());
-
+        */
+        String[] conjunto = new String[2];
         Scanner teclado = new Scanner(System.in);
 
-            String enter = teclado.nextLine();
-            String[] conjunto = new String[2];
-            conjunto = enter.split(" ");
+        String enter = teclado.nextLine();
+        conjunto = enter.split(" ");
 
-            if(conjunto[0] == "i"){
+        while(!conjunto[0].equals("f")){
+            if(conjunto[0].equals("i")){
                 a.insert(conjunto[1]);
             }
-            else{
+            else if(conjunto[0].equals("d")){
                 a.remove(conjunto[1]);
             }
+
+            enter = teclado.nextLine();
+            conjunto = enter.split(" ");
+        }
         
-
-
         teclado.close();
-
-
+        System.out.println(a.toString());
+        
     }
 }
