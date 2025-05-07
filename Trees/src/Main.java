@@ -1,36 +1,45 @@
 import java.util.Scanner;
 
+
+
 public class Main {
     public static void main(String[] args) throws Exception {
-        ArvBin a = new ArvBin(100);
-        //AVL av = new AVL(100);
-        /* 
-        a.insert("Sergio");
-        a.insert("Abel");
-        a.insert("Aaron");
-        a.insert("Sergio");
+        AVL avl = new AVL(100);
+        ArvBin abb = new ArvBin(100);
+        ArvPB apb = new ArvPB(100);
 
-        */
+
         String[] conjunto = new String[2];
         Scanner teclado = new Scanner(System.in);
 
-        String enter = teclado.nextLine();
-        conjunto = enter.split(" ");
-
-        while(!conjunto[0].equals("f")){
-            if(conjunto[0].equals("i")){
-                a.insert(conjunto[1]);
-            }
-            else if(conjunto[0].equals("d")){
-                a.remove(conjunto[1]);
-            }
-
+        String enter = "";
+        if (teclado.hasNextLine()) {
             enter = teclado.nextLine();
             conjunto = enter.split(" ");
         }
-        
+
+        while (true) {
+            if (conjunto[0].equals("i")) {
+                abb.insert(conjunto[1]);
+                apb.insert(conjunto[1]);
+                avl.insert(conjunto[1]);
+            } else if (conjunto[0].equals("d")) {
+                abb.remove(conjunto[1]);
+                apb.remove(conjunto[1]);
+                avl.remove(conjunto[1]);
+            }
+
+            if (teclado.hasNextLine()) {
+                enter = teclado.nextLine();
+                conjunto = enter.split(" ");
+            } else {
+                break; // Sai do loop se não houver mais linhas
+            }
+        }
+
         teclado.close();
-        System.out.println(a.toString());
-        
+        System.out.println(abb.toString());
+        System.out.println(apb.toString());
+        System.out.println(avl.toString());
     }
 }

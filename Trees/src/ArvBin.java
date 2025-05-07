@@ -1,7 +1,13 @@
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
 public class ArvBin implements Arv{
     public String[] nodes;
     public int qtd;
     public int kind;
+    public int lastNodeIndex;
 
     public ArvBin(int n){
         this.nodes = new String[n];
@@ -11,6 +17,7 @@ public class ArvBin implements Arv{
 
         this.qtd = 0;
         this.kind = 0; //para o tipo "ABB"
+        this.lastNodeIndex = -1;
     }
 
     protected int countNodes(int sub) {
@@ -49,16 +56,23 @@ public class ArvBin implements Arv{
             // Chama a função recursiva para inserir
             insertRecursive(0, value);
         }
+        findLastNodeIndex();
     }
 
+    protected void findLastNodeIndex() {
+        for (int cont = this.nodes.length-1; cont >= 0; cont--) { 
+            if (!this.nodes[cont].equals("")){
+                this.lastNodeIndex = cont;
+                return;
+            }
+        } 
+        this.lastNodeIndex = -1;
+   }
+
     private void insertRecursive(int index, String value) {
-        if (index >= this.nodes.length) {
-            System.out.println("Erro: Não é possível inserir, array cheio.");
-            return;
-        }
+        if (index >= this.nodes.length) return;
 
         if (this.nodes[index].equals("")) {
-            // Insere o valor na posição correta
             this.nodes[index] = value;
             this.qtd++;
         } 
@@ -68,15 +82,11 @@ public class ArvBin implements Arv{
         else if (value.compareTo(this.nodes[index]) > 0) {
             insertRecursive(nodeRight(index), value);
         } 
-        else {
-            // Valor já existe na árvore
-            System.out.println("Valor já existe na árvore: " + value);
-        }
     }
 
     protected boolean isBalance(){
         if(this.kind == 0) return(true);
-        else return false; //codar o resto disso aqui 
+        else return false;
     }
 
     @Override
@@ -149,7 +159,6 @@ public class ArvBin implements Arv{
         else {
             int maxesq = findMax(nodeLeft(index)); // Encontra o sucessor
             int mindir = findMin(nodeRight(index));
-
             
 
             if( maxesq < mindir){
@@ -165,6 +174,14 @@ public class ArvBin implements Arv{
             
         }
     }
+
+    protected void removeNodes(List<String> list){
+        for (int i = 0; i < this.nodes.length; i++) {
+            String val =  this.nodes[i];
+            if (list.contains(val)) this.nodes[i] = "";
+      }
+      this.qtd -= list.size();
+   }
 
     // Encontra o índice do menor valor em uma subárvore
     protected int findMin(int index) {
@@ -192,53 +209,60 @@ public class ArvBin implements Arv{
     @Override
     public String toString() {
         StringBuilder dot = new StringBuilder();
-        dot.append("digraph Arvore {\n");
+        dot.append("digraph {\n");
 
-        for (int i = 0; i < this.nodes.length; i++) {
-            int left = nodeLeft(i);
-            int right = nodeRight(i);
-
-            if(left != -1 && right != -1){
-                if (!this.nodes[nodeLeft(i)].equals("") && !this.nodes[nodeRight(i)].equals("")) {
-                    
-                    dot.append("\"").append(i+" ").append(this.nodes[i]).append("\"");
-                    if (left < this.nodes.length && left != -1 && !this.nodes[left].equals("")) {
-                        dot.append(" ->").append(left+" "+this.nodes[left]+"\"\n");
+        if(this.qtd==1) {
+            dot.append("\"").append("0 ").append(this.nodes[0]).append("\"").append(" }\n");
+        }
+        else {
+            for (int i = 0; i < this.nodes.length; i++) {
+                if (!this.nodes[i].equals("")) {
+                    int left = nodeLeft(i);
+                    if (left < nodes.length && left != -1 && !this.nodes[left].equals("")) {
+                        dot.append("\"").append(i+" ").append(this.nodes[i]).append("\"").append(" ->").append("\"").append(left+" ").append(this.nodes[left]).append("\"\n");
                     }
-
-                    dot.append("\"").append(i+" ").append(this.nodes[i]).append("\"");
-                    if (right < this.nodes.length && right != -1 && !this.nodes[right].equals("")) {
-                        dot.append(" ->").append(right+" "+this.nodes[right]+"\"\n");
+                    // Adiciona a aresta para o filho direito, se existir
+                    int right = nodeRight(i);
+                    if (right < nodes.length && right != -1 && !this.nodes[right].equals("")) {
+                        dot.append("\"").append(i+" ").append(this.nodes[i]).append("\"").append(" ->").append("\"").append(right+" ").append(this.nodes[right]).append("\"\n");
                     }
                 }
             }
 
-            else{ 
-                if(left != -1){ 
-                    if (!this.nodes[nodeLeft(i)].equals("")) {
-                        // Adiciona o nó atual
-                        dot.append("\"").append(i+" ").append(this.nodes[i]).append("\"");
-                        // Adiciona a aresta para o filho esquerdo, se existir
-                        if (!this.nodes[left].equals("")) {
-                            dot.append(" ->").append(left+" "+this.nodes[left]+"\"\n");
-                        }
-                    }
-                }
+            dot.append("}\n");
+        }
+        return dot.toString();
+    }
 
-                else if(right != -1){
-                    if (!this.nodes[nodeRight(i)].equals("")) {
+    protected List<String> getSubTree(int position){ //Percorre a subarvore pelos niveis removendo os nós e guardando eles em ordem
+        List <String> subt = new ArrayList<>();
+        Queue<Integer> queue = new LinkedList<>();
 
-                        dot.append("\"").append(i+" ").append(this.nodes[i]).append("\"");
-                        if (!this.nodes[right].equals("")) {
-                            dot.append(" ->").append(right+" "+this.nodes[right]+"\"\n");
-                        }
-                    }
-                }   
+        int index;
+        int left;
+        int right;
+        
+        if(position >= 0 && position < this.nodes.length && !this.nodes[position].equals("")){
+            queue.add(position);
+        }
+
+        while(!queue.isEmpty()){
+            index = queue.poll();
+            subt.add(this.nodes[index]);
+
+            left = nodeLeft(index);
+            right = nodeRight(index);
+
+            if (left < this.nodes.length && !this.nodes[left].equals("")) {
+                queue.add(left);
+            }
+    
+            if (right < this.nodes.length && !this.nodes[right].equals("")) {
+                queue.add(right);
             }
         }
 
-        dot.append("}\n");
-        return dot.toString();
+        return subt;
     }
 
     protected int findIndex(int src, String target){
