@@ -1,3 +1,10 @@
+/*
+NOMES:
+HENRIQUE VIEIRA LIMA    NUSP: 15459372
+GABRIEL PHILIPPE PRADO  NUSP: 15453730
+
+*/
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;

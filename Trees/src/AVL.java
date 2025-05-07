@@ -1,3 +1,10 @@
+/*
+NOMES:
+HENRIQUE VIEIRA LIMA    NUSP: 15459372
+GABRIEL PHILIPPE PRADO  NUSP: 15453730
+
+*/
+
 import java.util.List;
 
 public class AVL extends ArvBin {
