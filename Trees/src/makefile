@@ -2,4 +2,4 @@ all:
 	javac Main.java
 
 run:
-	java Main.java < ../testfiles/2.in
+	java Main.java < ../testfiles/13.in

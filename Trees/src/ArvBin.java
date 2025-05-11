@@ -55,12 +55,7 @@ public class ArvBin implements Arv{
 
     @Override
     public void insert(String value) {
-        if (this.nodes[0].equals("")) {
-            // Insere na raiz se estiver vazia
-            this.nodes[0] = value;
-            this.qtd++;
-        } else {
-            // Chama a função recursiva para inserir
+        if (!find(value)) {
             insertRecursive(0, value);
         }
         findLastNodeIndex();
@@ -134,51 +129,56 @@ public class ArvBin implements Arv{
         int index = findIndex(0, target); // Encontra o índice do nó a ser removido
 
         if (index == -1) return false; // Nó não encontrado
-        if (removeNode(index) == true){
-            this.qtd--;
-            return true;
-        }
-        return false;
+        removeNode(index);
+        this.qtd--;
+        return true;
     }
 
-    private boolean removeNode(int index){
-        
-        // Caso 1: Nó é uma folha
-        if (nodeLeft(index) >= nodes.length || nodes[nodeLeft(index)].equals("")) {
-            if (nodeRight(index) >= nodes.length || nodes[nodeRight(index)].equals("")) {
-                nodes[index] = ""; // Remove o nó simplesmente
-                return true;
-            }
+    private boolean isPosicaoEfetivamenteVaziaOuForaDosLimites(int indicePosicao) {
+        return indicePosicao < 0 || indicePosicao >= this.nodes.length || this.nodes[indicePosicao].equals("");
+    }
+
+    private boolean removeNode(int index) {
+        // Verifica se o próprio nó a ser removido é válido e existe
+        // O método público remove() deve garantir que 'index' seja válido inicialmente.
+        // Esta verificação também é para chamadas recursivas.
+        if (index < 0 || index >= this.nodes.length || this.nodes[index].equals("")) {
+            return false; // Nó é inválido, fora dos limites ou já está vazio
         }
 
+        int l_idx = nodeLeft(index);
+        int r_idx = nodeRight(index);
+
+        boolean filhoEsquerdoVazioOuOOB = isPosicaoEfetivamenteVaziaOuForaDosLimites(l_idx);
+        boolean filhoDireitoVazioOuOOB = isPosicaoEfetivamenteVaziaOuForaDosLimites(r_idx);
+
+        // Caso 1: Nó é uma folha (sem filhos válidos)
+        if (filhoEsquerdoVazioOuOOB && filhoDireitoVazioOuOOB) {
+            this.nodes[index] = ""; // Marca o nó atual como vazio
+            return true;
+        }
         // Caso 2: Nó tem apenas um filho
-        if (nodes[nodeLeft(index)].equals("")) { // Apenas filho direito
-            this.nodes[index] = this.nodes[nodeRight(index)];
-            return(removeNode(nodeRight(index)));
+        else if (filhoEsquerdoVazioOuOOB && !filhoDireitoVazioOuOOB) { // Apenas o filho direito existe
+            // Promove o sucessor (menor da subárvore direita)
+            int indiceSucessor = findMin(r_idx); // r_idx é um índice de nó válido aqui
+            this.nodes[index] = this.nodes[indiceSucessor];
+            removeNode(indiceSucessor); // Remove recursivamente o nó sucessor original
+            return true;
         }
-        else if (nodes[nodeRight(index)].equals("")) { // Apenas filho direito
-            this.nodes[index] = this.nodes[nodeLeft(index)];
-            return(removeNode(nodeLeft(index)));
+        else if (!filhoEsquerdoVazioOuOOB && filhoDireitoVazioOuOOB) { // Apenas o filho esquerdo existe
+            // Promove o predecessor (maior da subárvore esquerda)
+            int indicePredecessor = findMax(l_idx); // l_idx é um índice de nó válido aqui
+            this.nodes[index] = this.nodes[indicePredecessor];
+            removeNode(indicePredecessor); // Remove recursivamente o nó predecessor original
+            return true;
         }
-
-
         // Caso 3: Nó tem dois filhos
-        else {
-            int maxesq = findMax(nodeLeft(index)); // Encontra o sucessor
-            int mindir = findMin(nodeRight(index));
-            
-
-            if( maxesq < mindir){
-                this.nodes[index] = this.nodes[maxesq];
-                removeNode(maxesq);
-                return true;
-            }
-            else{
-                this.nodes[index] = this.nodes[mindir];
-                removeNode(mindir);
-                return true;
-            }
-            
+        else { // Ambos os filhos existem (!filhoEsquerdoVazioOuOOB && !filhoDireitoVazioOuOOB)
+            // Promove o predecessor (maior da subárvore esquerda)
+            int indicePredecessor = findMax(l_idx); // l_idx é um índice de nó válido
+            this.nodes[index] = this.nodes[indicePredecessor];
+            removeNode(indicePredecessor); // Remove recursivamente o nó predecessor original
+            return true;
         }
     }
 
@@ -191,18 +191,30 @@ public class ArvBin implements Arv{
    }
 
     // Encontra o índice do menor valor em uma subárvore
-    protected int findMin(int index) {
-        while (nodeLeft(index) < nodes.length && !nodes[nodeLeft(index)].equals("")) {
-            index = nodeLeft(index);
+    protected int findMin(int indiceAtual) {
+        // Assume-se que indiceAtual é um índice válido de um nó existente.
+        int indiceFilhoEsquerdo = nodeLeft(indiceAtual);
+
+        // Loop enquanto existir um filho esquerdo válido e não vazio
+        while (indiceFilhoEsquerdo >= 0 && indiceFilhoEsquerdo < this.nodes.length && // Verifica os limites primeiro
+               !this.nodes[indiceFilhoEsquerdo].equals("")) { // Depois verifica se está vazio
+            indiceAtual = indiceFilhoEsquerdo;
+            indiceFilhoEsquerdo = nodeLeft(indiceAtual); // Pega o próximo filho esquerdo para o novo atual
         }
-        return index;
+        return indiceAtual; // Retorna o índice do menor nó na subárvore
     }
 
-    protected int findMax(int index){
-        while (nodeRight(index) < nodes.length && !nodes[nodeRight(index)].equals("")) {
-            index = nodeRight(index);
+    protected int findMax(int indiceAtual) {
+        // Assume-se que indiceAtual é um índice válido de um nó existente.
+        int indiceFilhoDireito = nodeRight(indiceAtual);
+
+        // Loop enquanto existir um filho direito válido e não vazio
+        while (indiceFilhoDireito >= 0 && indiceFilhoDireito < this.nodes.length && // Verifica os limites primeiro
+               !this.nodes[indiceFilhoDireito].equals("")) { // Depois verifica se está vazio
+            indiceAtual = indiceFilhoDireito;
+            indiceFilhoDireito = nodeRight(indiceAtual); // Pega o próximo filho direito para o novo atual
         }
-        return index;
+        return indiceAtual; // Retorna o índice do maior nó na subárvore
     }
 
     protected void setNode(int i, String value){
