@@ -5,122 +5,46 @@ GABRIEL PHILIPPE PRADO  NUSP: 15453730
 
 */
 
-public class ArvPB extends ArvBin {
+import java.util.Arrays;
 
+public class ArvPB extends ArvBin {
     public ArvPB(int n) {
         super(n);
+        this.kind = 1; //para o tipo "APB"
     }
 
     @Override
-    public void insert(String valor) {
-        if (this.qtd >= this.nodes.length) {
-            System.out.println("Capacidade máxima atingida.");
-            return;
-        }
-
-        if (contains(valor)) return;
-
-        this.nodes[this.qtd++] = valor;
-        reconstruirPerfeita();
+    public void insert(String value){
+        super.insert(value);
+        this.toBalance();
     }
+
 
     @Override
-    public boolean remove(String valor) {
-        int index = indexOf(valor);
-        if (index == -1) return false;
-
-        // Substituir por um filho (preferencialmente o esquerdo)
-        int posNaArvore = findInTree(valor);
-        if (posNaArvore != -1) {
-            int filho = -1;
-            if (nodeLeft(posNaArvore) < getMaxTam() && !getNode(nodeLeft(posNaArvore)).equals("")) {
-                filho = nodeLeft(posNaArvore);
-            } else if (nodeRight(posNaArvore) < getMaxTam() && !getNode(nodeRight(posNaArvore)).equals("")) {
-                filho = nodeRight(posNaArvore);
-            }
-
-            if (filho != -1) {
-                String substituto = getNode(filho);
-                this.nodes[index] = substituto;
-                removeElemento(substituto);
-                this.qtd--;
-            } else {
-                // Não tem filhos, apenas remove
-                removeElemento(valor);
-                this.qtd--;
-            }
-        } else {
-            removeElemento(valor);
-            this.qtd--;
-        }
-        reconstruirPerfeita();
-        return true;
-    }
-
-
-    public void reconstruirPerfeita() {
-        // Copia e ordena os elementos válidos
-        String[] copia = new String[this.qtd];
-        System.arraycopy(this.nodes, 0, copia, 0, this.qtd);
-        java.util.Arrays.sort(copia);
-    
-        // Limpa a árvore
-        for (int i = 0; i < getMaxTam(); i++) {
-            setNode(i, "");
-        }
-        newLen(0);
-    
-        // Insere recursivamente para balancear
-        reconstruirPerfeitaRec(copia, 0, this.qtd - 1, 0);
-        newLen(this.qtd);
-    }
-    
-    // Insere recursivamente o elemento do meio como raiz/sub-raiz
-    private void reconstruirPerfeitaRec(String[] arr, int ini, int fim, int pos) {
-        if (ini > fim || pos >= getMaxTam()) return;
-        int meio = (ini + fim) / 2;
-        setNode(pos, arr[meio]);
-        reconstruirPerfeitaRec(arr, ini, meio - 1, nodeLeft(pos));
-        reconstruirPerfeitaRec(arr, meio + 1, fim, nodeRight(pos));
-    }
-
-    private void removeElemento(String valor) {
-        int idx = indexOf(valor);
-        if (idx == -1) return;
-
-        for (int i = idx; i < this.qtd - 1; i++) {
-            this.nodes[i] = this.nodes[i + 1];
-        }
-        this.nodes[this.qtd - 1] = "";
-    }
-
-    private boolean contains(String valor) {
-        for (int i = 0; i < this.nodes.length; i++) {
-            if (this.nodes[i].equals(valor)) return true;
+    public boolean remove(String target){
+        if(super.remove(target)){
+            this.toBalance();
+            return true;
         }
         return false;
     }
 
-    private int indexOf(String valor) {
-        for (int i = 0; i < this.nodes.length; i++) {
-            if (this.nodes[i].equals(valor)) return i;
+    protected void toBalance(){
+        if(!isBalance()){
+            String[] arrAux = Arrays.stream(this.nodes).filter(item -> !item.equals("")).sorted().toArray(String[]::new);
+            Arrays.fill(this.nodes, "");
+            this.qtd = 0;
+            this.rebuild(arrAux, 0, arrAux.length-1);
         }
-        return -1;
     }
 
-    private int findInTree(String valor) {
-        for (int i = 0; i < getMaxTam(); i++) {
-            if (getNode(i).equals(valor)) return i;
-        }
-        return -1;
-    }
+    private void rebuild(String[] arr, int inicio, int fim){
+        if(inicio>fim) 
+            return;
 
-    protected int getMaxTam(){
-        return this.nodes.length;
-    }
-
-    //atualiza a quantidade de nós
-    protected void newLen(int newlen){
-        this.qtd = newlen;
+        int meio = (fim+inicio)/2;
+        super.insert(arr[meio]);
+        rebuild(arr, inicio, meio-1);
+        rebuild(arr, meio+1, fim);
     }
 }

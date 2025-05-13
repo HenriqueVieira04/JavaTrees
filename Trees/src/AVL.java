@@ -11,11 +11,13 @@ public class AVL extends ArvBin {
 
    public AVL(int len) {
       super(len);
+      this.kind = 2; 
    }
 
    @Override
    public void insert(String value) {
-      super.insert(value); 
+      super.insert(value);
+      super.isBalance(); 
       this.checkNodeListBalance(); 
    }
 
@@ -25,6 +27,12 @@ public class AVL extends ArvBin {
       this.checkNodeListBalance();
       return true;
    }
+
+   @Override
+   public boolean isBalance(){
+      return this.checkNodeListBalance();
+   }
+
 
    private boolean nodeIsBalanced(int index) {
       int bf = this.getBalancing(index);
